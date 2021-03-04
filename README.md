@@ -1,6 +1,8 @@
 # driver_station
 
-A new Flutter project.
+A WIP alternative driver station.
+
+![screenshot](screenshot.png)
 
 ## Getting Started
 
