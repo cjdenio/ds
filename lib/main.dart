@@ -1,6 +1,26 @@
+import 'package:driver_station/widgets/battery.dart';
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'dart:async' show Timer;
+import 'dart:typed_data';
+
+import './widgets/enabledisable.dart';
 
 void main() {
+  // RawDatagramSocket.bind("127.0.0.1", 1234).then((socket) {
+  //   var seq = 0;
+  //   Timer.periodic(Duration(milliseconds: 2), (timer) {
+  //     socket.send([
+  //       ...Uint16List.fromList([seq]).buffer.asUint8List(),
+  //       /* version */ 0x01,
+  //       /* control */ 0x04,
+  //       /* request */ 0x00,
+  //       /* alliance */ 0x01
+  //     ], InternetAddress("127.0.0.1"), 1110);
+  //     seq++;
+  //   });
+  // });
+
   runApp(MyApp());
 }
 
@@ -29,14 +49,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
   bool enabled = false;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
+  String mode = "Teleoperated";
 
   @override
   Widget build(BuildContext context) {
@@ -51,10 +65,19 @@ class _MyHomePageState extends State<MyHomePage> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
-                      child: ModeSelector(
-                    modes: ["Teleoperated", "Autonomous", "Test", "Practice"],
-                    selected: "Autonomous",
-                  )),
+                    child: ModeSelector(
+                      modes: ["Teleoperated", "Autonomous", "Test", "Practice"],
+                      selected: this.mode,
+                      onChange: (mode) {
+                        setState(() {
+                          this.mode = mode;
+                          if (enabled) {
+                            this.enabled = false;
+                          }
+                        });
+                      },
+                    ),
+                  ),
                   EnableDisable(
                     enabled: this.enabled,
                     onChange: (enabled) {
@@ -67,8 +90,47 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
           ),
-          Expanded(child: Container(color: Colors.transparent)),
-          Expanded(child: Container(color: Colors.transparent)),
+          Expanded(
+            child: Container(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        margin: EdgeInsets.only(right: 10),
+                        child: Text("Elapsed Time"),
+                      ),
+                      Text(
+                        "0:00.00",
+                        style: Theme.of(context).textTheme.headline4,
+                      ),
+                    ],
+                  )
+                ],
+              ),
+            ),
+          ),
+          Expanded(
+            child: Container(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    child: BatteryStatus(
+                      status: 0.8,
+                    ),
+                    margin: EdgeInsets.only(bottom: 10),
+                  ),
+                  Status(text: "Communications", success: true),
+                  Status(text: "Robot Code", success: true),
+                  Status(text: "Joysticks"),
+                ],
+              ),
+            ),
+          ),
           Expanded(flex: 2, child: Container(color: Colors.blue)),
         ],
       ),
@@ -76,49 +138,27 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class EnableDisable extends StatelessWidget {
-  final bool enabled;
-  final void Function(bool) onChange;
+class Status extends StatelessWidget {
+  final String text;
+  final bool success;
 
-  EnableDisable({this.enabled = false, this.onChange});
-
-  Widget getButton(String text, Color color, bool selected) {
-    return selected
-        ? ElevatedButton(
-            onPressed: () {
-              this.onChange(text == "Enable");
-            },
-            child: Text(text),
-            style: ButtonStyle(
-              padding: MaterialStateProperty.all(EdgeInsets.all(30)),
-              backgroundColor: MaterialStateProperty.all(color),
-            ),
-          )
-        : OutlinedButton(
-            onPressed: () {
-              this.onChange(text == "Enable");
-            },
-            child: Text(text),
-            style: ButtonStyle(
-                padding: MaterialStateProperty.all(EdgeInsets.all(30)),
-                foregroundColor: MaterialStateProperty.all(color)),
-          );
-  }
+  Status({this.text, this.success = false});
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          margin: EdgeInsets.symmetric(horizontal: 10),
-          child: getButton("Enable", Colors.blue, this.enabled),
-        ),
-        Container(
-          margin: EdgeInsets.symmetric(horizontal: 10),
-          child: getButton("Disable", Colors.red, !this.enabled),
-        ),
-      ],
+    return Container(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(margin: EdgeInsets.only(right: 10), child: Text(this.text)),
+          Icon(
+            Icons.circle,
+            color: this.success ? Colors.greenAccent : Colors.red,
+            size: 15,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -126,8 +166,9 @@ class EnableDisable extends StatelessWidget {
 class ModeSelector extends StatelessWidget {
   final List<String> modes;
   final String selected;
+  final void Function(String) onChange;
 
-  ModeSelector({this.modes, this.selected});
+  ModeSelector({this.modes, this.selected, this.onChange});
 
   @override
   Widget build(BuildContext context) {
@@ -150,7 +191,7 @@ class ModeSelector extends StatelessWidget {
                     padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   ),
                   onTap: () {
-                    print("Mode: $e");
+                    this.onChange(e);
                   },
                 ),
               ),
