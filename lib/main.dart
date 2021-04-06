@@ -7,20 +7,6 @@ import 'dart:typed_data';
 import './widgets/enabledisable.dart';
 
 void main() {
-  // RawDatagramSocket.bind("127.0.0.1", 1234).then((socket) {
-  //   var seq = 0;
-  //   Timer.periodic(Duration(milliseconds: 2), (timer) {
-  //     socket.send([
-  //       ...Uint16List.fromList([seq]).buffer.asUint8List(),
-  //       /* version */ 0x01,
-  //       /* control */ 0x04,
-  //       /* request */ 0x00,
-  //       /* alliance */ 0x01
-  //     ], InternetAddress("127.0.0.1"), 1110);
-  //     seq++;
-  //   });
-  // });
-
   runApp(MyApp());
 }
 
@@ -66,7 +52,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 children: [
                   Expanded(
                     child: ModeSelector(
-                      modes: ["Teleoperated", "Autonomous", "Test", "Practice"],
+                      modes: ["Teleoperated", "Autonomous", "Test"],
                       selected: this.mode,
                       onChange: (mode) {
                         setState(() {
@@ -152,6 +138,7 @@ class Status extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(margin: EdgeInsets.only(right: 10), child: Text(this.text)),
+          Expanded(child: Container()),
           Icon(
             Icons.circle,
             color: this.success ? Colors.greenAccent : Colors.red,
